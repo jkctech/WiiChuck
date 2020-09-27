@@ -1,32 +1,42 @@
 #include <WiiChuck.h>
 
-Accessory nunchuck1;
+Accessory nunchuck;
 
-void setup() {
+void setup()
+{
 	Serial.begin(115200);
-	nunchuck1.begin();
-	if (nunchuck1.type == Unknown) {
-		/** If the device isn't auto-detected, set the type explicatly
-		 * 	NUNCHUCK,
-		 WIICLASSIC,
-		 GuitarHeroController,
-		 GuitarHeroWorldTourDrums,
-		 DrumController,
-		 DrawsomeTablet,
-		 Turntable
-		 */
-		nunchuck1.type = NUNCHUCK;
-	}
+	
+	nunchuck.begin();
+
+	/*
+	 * If type cannot be detected, fall back to standard Nunchuck.
+	 *
+	 * If type is not auto-detected, you can set the type manually:
+	 *  NUNCHUCK
+	 *  WIICLASSIC
+	 *  GuitarHeroController
+	 *  GuitarHeroWorldTourDrums
+	 *  DrumController
+	 *  DrawsomeTablet
+	 *  Turntable
+	 */
+	if (nunchuck.type == Unknown)
+		nunchuck.type = NUNCHUCK;
 }
 
-void loop() {
+void loop()
+{
 	Serial.println("-------------------------------------------");
-	nunchuck1.readData();    // Read inputs and update maps
-	nunchuck1.printInputs(); // Print all inputs
-	for (int i = 0; i < WII_VALUES_ARRAY_SIZE; i++) {
-		Serial.println(
-				"Controller Val " + String(i) + " = "
-						+ String((uint8_t) nunchuck1.values[i]));
+	
+	// Collect data from device
+	nunchuck.readData();
+	
+	// Print data in automatic style
+	nunchuck.printInputs();
+	
+	// Print all bytes in array
+	for (int i = 0; i < WII_VALUES_ARRAY_SIZE; i++)
+	{
+		Serial.println("Controller Val " + String(i) + " = " + String((uint8_t) nunchuck.values[i]));
 	}
-
 }

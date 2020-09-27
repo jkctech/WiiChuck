@@ -1,53 +1,74 @@
 #include <WiiChuck.h>
 #if defined(ARDUINO_ARCH_ESP32)
-#include <ESP32Servo.h>
+# include <ESP32Servo.h>
 #else
-#include <Servo.h>
+# include <Servo.h>
 #endif
+
 Accessory nunchuck1;
-Servo one;
-Servo two;
-Servo three;
 
-void setup() {
-	delay(1000);
+Servo servoOne;
+Servo servoTwo;
+Servo ServoThree;
+
+void setup()
+{
 	Serial.begin(115200);
-	Serial.println("Loading controller...");
+	
 	nunchuck1.begin();
-	if (nunchuck1.type == Unknown) {
-		/** If the device isn't auto-detected, set the type explicatly
-		 * 	
-		 NUNCHUCK,
-		 WIICLASSIC,
-		 GuitarHeroController,
-		 GuitarHeroWorldTourDrums,
-		 DrumController,
-		 DrawsomeTablet,
-		 Turntable
-		 */
-		nunchuck1.type = NUNCHUCK;
-	}
-	one.attach(33,1000,2000);
-	two.attach(35,1000,2000);
-	three.attach(36,1000,2000);
+	
+	/*
+	 * If type cannot be detected, fall back to standard Nunchuck.
+	 *
+	 * If type is not auto-detected, you can set the type manually:
+	 *  NUNCHUCK
+	 *  WIICLASSIC
+	 *  GuitarHeroController
+	 *  GuitarHeroWorldTourDrums
+	 *  DrumController
+	 *  DrawsomeTablet
+	 *  Turntable
+	 */
+	if (nunchuck.type == Unknown)
+		nunchuck.type = NUNCHUCK;
 
+	// Attach servo's to pin 33, 35 and 36
+	servoOne.attach(33, 1000, 2000);
+	servoTwo.attach(35, 1000, 2000);
+	ServoThree.attach(36, 1000, 2000);
 }
 
-void loop() {
-	//Serial.println("-------------------------------------------");
-	nunchuck1.readData();    // Read inputs and update maps
-	int Servo1Val = map(nunchuck1.values[0],0,255,0,180);
-	int Servo2Val = map( nunchuck1.values[10]>0?
-						 0:// Upper button pressed
-						 (nunchuck1.values[11]>0?
-							255:// Lower button pressed
-							128)//neither pressed
-						,0,255,0,180);
-	int Servo3Val = map(nunchuck1.values[1],0,255,0,130);// z button
-	one.write(Servo1Val);
-	two.write(Servo2Val);
-	three.write(Servo3Val);
+void loop()
+{
+	int servoOneVal;
+	int ServoTwoVal;
+	int ServoThreeVal;
 
-	Serial.println("Set "+String(Servo1Val)+" "+String(Servo2Val)+" "+String(Servo3Val));
+	// Collect data from device
+	nunchuck1.readData();
+	
+	// Map Nunchuck's X axis to servo rotation
+	servoOneVal = map(nunchuck1.values[0], 0, 255, 0, 180);
 
+	// Map Nunchuck's Y axis to servo rotation
+	ServoTwoVal = map(nunchuck1.values[1], 0, 255, 0, 180);
+
+	// If Z button is pressed, put servo on 0 degrees
+	if (nunchuck1.values[10] == 255)
+		ServoThreeVal = 0;
+	
+	// If C button is pressed, put servo on 180 degrees
+	else if (nunchuck1.values[11] == 255)
+		ServoThreeVal = 180;
+	
+	// If none are pressed, center the servo to 90 degrees
+	else
+		ServoThreeVal = 90;
+	
+	// Write data to servo's
+	servoOne.write(servoOneVal);
+	servoTwo.write(ServoTwoVal);
+	ServoThree.write(ServoThreeVal);
+
+	Serial.println("Set " + String(servoOneVal) + " " + String(ServoTwoVal) + " " + String(ServoThreeVal));
 }
