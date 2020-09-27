@@ -1,13 +1,27 @@
 #include "Accessory.h"
 
-void Accessory::initBytesDrawsome() {
-	Serial.println("Drawesome Init");
+int Accessory::getPenXPosition()
+{
+	return decodeInt(penXPositionBytes);
+}
 
-	// Enable Encrypted Mode.
-	//enableEncryption(true);
+int Accessory::getPenYPosition()
+{
+	return decodeInt(penYPositionBytes);
+}
 
-	Serial.println("Drawesome Specific init");
+int Accessory::getPenPressure()
+{
+	return decodeInt(penPressureBytes);
+}
 
+int Accessory::getPenContact()
+{
+	return decodeBit(penContactBytes);
+}
+
+void Accessory::initBytesDrawsome()
+{
 	_burstRead(0x20);
 	_burstRead(0x28);
 	delay(100);
@@ -31,7 +45,8 @@ void Accessory::initBytesDrawsome() {
 	delay(100);
 }
 
-void Accessory::getValuesDrawsome(uint8_t * values) {
+void Accessory::getValuesDrawsome(uint8_t *values)
+{
 	values[0] = map(getPenXPosition(), 0, 64, 0, 256);
 	values[1] = map(getPenYPosition(), 0, 64, 0, 256);
 	values[2] = map(getPenPressure(), 0, 32, 0, 256);
@@ -54,15 +69,18 @@ void Accessory::getValuesDrawsome(uint8_t * values) {
 
 	values[17] = 0;
 	values[18] = 0;
-	for (int i = 0; i < WII_VALUES_ARRAY_SIZE; i++) {
-		if (values[i] > 247) {
+
+	for (int i = 0; i < WII_VALUES_ARRAY_SIZE; i++)
+	{
+		if (values[i] > 247)
 			values[i] = 255;
-		}
 	}
 }
 
-void Accessory::printInputsDrawsome(Stream& stream) {
+void Accessory::printInputsDrawsome(Stream &stream)
+{
 	char st[100];
+
 	stream.print("Drawsome ");
 	sprintf(st, "  PenX: %4d  | PenY: %4d | Force: %4d | pen?: ",
 			getPenXPosition(), getPenYPosition(), getPenPressure());
@@ -74,27 +92,8 @@ void Accessory::printInputsDrawsome(Stream& stream) {
 	else
 		stream.print("--- ");
 
-	for (byte mask = 0x80; mask; mask >>= 1) {
-		if (mask & _dataarray[0])
-			Serial.print('1');
-		else
-			Serial.print('0');
-	}
+	for (byte mask = 0x80; mask; mask >>= 1)
+		Serial.print(mask & _dataarray[0] ? '1' : '0');
+	
 	Serial.print(' ');
-}
-
-int Accessory::getPenXPosition() {
-	return decodeInt(penXPositionBytes);
-}
-
-int Accessory::getPenYPosition() {
-	return decodeInt(penYPositionBytes);
-}
-
-int Accessory::getPenPressure() {
-	return decodeInt(penPressureBytes);
-}
-
-int Accessory::getPenContact() {
-	return decodeBit(penContactBytes);
 }
