@@ -6,205 +6,378 @@ An Arduino library for talking to every extension controller made for the Wii in
 * Nunchuk
 * Classic Controller
 * Guitar Hero Guitar
-* Guitar Hero Drums
+* Guitar Hero and Taiko Drums
 * DJ Hero
-* Drawesome Tablet
-* Taiko Drums
+* Drawsome Tablet
 
+# General Usage
 
-# Mapping
-
-All controllers have been mapped across a single readable array so that code written for one Wii accessort can be made generic for all of Wii accessory devices. The values that come from the controller are scaled to a 0-255 range for all analog and for all digital values. Each value is stored in a single byte in the 'values[]' array, a public member of the accessory class. 
-
-Initialize the controller first:
-
+Ofcourse, working with a library, requires you to include it:
+```C
+#include <WiiChuck.h>
 ```
-nunchuck1.begin();
+To use the class methods on a controller instace, you first create a new instance.
+```C++
+Accessory controller;
 ```
-
-In loop, when reading the controller values, first call:
-
+After that, you will have to initialize it:
+```C++
+controller.begin();
 ```
-nunchuck1.readData();    // Read inputs and update maps
+After the controller is succesfully initialized, you will be able to detect and force the type of controller connected using ENUMs:
+```C++
+if (controller.type == Unknown)
+	controller.type = NUNCHUCK;
 ```
-
-Then read the controller values out of the 'values[]' array:
-
+A controller can be any of these types:
+```C++
+NUNCHUCK
+WIICLASSIC
+GuitarHeroController
+GuitarHeroWorldTourDrums
+DrumController
+DrawsomeTablet
+Turntable
 ```
-uint8_t joystickValueX = nunchuck1.values[1];
-uint8_t joystickValueY = nunchuck1.values[2];
+**Be aware that all public member functions can be called on ALL types of controller.**
+Doing so however, will have undefined behaviour.
+*(For example, calling a Wii guitar's ```getGreenButton()``` on a Drawsome Tablet controller.)*
 
-...
+# Getting data
+There are 2 ways of collecting the data from a controller.
+1. Using public member functions
+2. Using the mapping array
 
-uint8_t lastValue = nunchuck1.values[19];
-
+Both ways require the following basic usage.
+On every iteration of your main loop, you want to call:
+```C++
+controller.readData();
 ```
+This collects the current data and stores it so you can access it.
 
-## Nunchuck mapping
+**Please note** that the mapping array does not always contain all information from a controller.
+*(For example, the stick of a Wii Guitar is not included in the mapping array.)*
 
-```
-	values[1]=map(getJoyX(),0,255,0,255);
-	values[2]=map(getJoyY(),0,255,0,255);
-	values[3]=map(getRollAngle(),0,1024,0,256);
-	values[4]=map(getPitchAngle(),0,1024,0,256);
-	values[5]=map(getAccelX(),0,1024,0,256);
-	values[6]=map(getAccelY(),0,1024,0,256);
+## 1. Public Functions
+All controller types have a list of their own designated functions.
+Most of them are functions to gather the data for a specific input. (E.g. a button, a stick, etc.)
 
-	values[7]=map(getAccelZ(),0,1024,0,256);
-	values[8]=0;
-	values[9]=0;
-	values[10]=0;
-	values[11]=getButtonZ()?255:0;
-	values[12]=getButtonC()?255:0;
-	values[13]=0;
-	values[14]=0;
+Every type also includes these standard functions:
 
-	values[15]=0;
-	values[16]=0;
-	values[17]=0;
+ - ```void getValuesTYPE(uint8_t *values)``` Stores all data in a given array.
+ - ```void printInputsTYPE(Stream &stream = Serial)``` Pretty prints values from this controller.
 
-	values[18]=0;
-	values[19]=0;
-```
+*(Where "TYPE" stands for the controller type.)*
 
-## Classic Controller Mapping
+<details>
+	<summary>Nunchuck</summary>
 
-```
-	values[1]=map(getJoyXLeft(),0,64,0,256);
-	values[2]=map(getJoyYLeft(),0,64,0,256);
-	values[3]=map(getJoyXRight(),0,32,0,256);
-	values[4]=map(getJoyYRight(),0,32,0,256);
-	values[5]=0;
-	values[6]=0;
+	int getJoyX()
+	int getJoyY()
 
-	values[7]=getPadRight()?255:(getPadLeft()?0:128);
-	values[8]=getPadDown()?0:(getPadUp()?255:128);
-	values[9]=getButtonX()?255:0;
-	values[10]=getButtonY()?255:0;
-	values[11]=getButtonZLeft()?255:0;
-	values[12]=map(getTriggerLeft(),0,32,0,256);
-	values[13]=getButtonA()?255:0;
-	values[14]=getButtonB()?255:0;
+	float getRollAngle()
+	float getPitchAngle()
 
-	values[15]=getButtonMinus()?0:(getButtonPlus()?255:128);
-	values[16]=getButtonHome()?255:0;
-	values[17]=0;
+	int getAccelX()
+	int getAccelY()
+	int getAccelZ()
 
-	values[18]=map(getTriggerRight(),0,32,0,256);
-	values[19]=getButtonZRight()?255:0;
-```
+	boolean getButtonC()
+	boolean getButtonZ()
 
-## DJ Table mapping
+	void getValuesNunchuck(uint8_t *values)
+	void printInputsNunchuck(Stream &stream = Serial)
+</details>
 
-```
-	values[1]=map(getCrossfadeSlider(),0,255,0,256);
-	values[2]=map(getEffectDial(),0,255,0,256);
-	values[3]=map(getStickX(),0,255,0,256);
-	values[4]=map(getStickY(),0,255,0,256);
-	values[5]=map(getRightDJTable(),0,255,0,256);
-	values[6]=map(getLeftDJTable(),0,255,0,256);
+<details>
+	<summary>Wii Classic Controller</summary>
 
-	values[7]=getPlusButton()?255:(getMinusButton()?0:128);
-	values[8]=getEuphoriaButton()?255:0;
-	values[9]=0;
-	values[10]=0;
-	values[11]=getRightBlueButton()?255:0;
-	values[12]=getRightRedButton()?255:0;
-	values[13]=getRightGreenButton()?255:0;
-	values[14]=getLeftBlueButton()?255:0;
+	int getJoyXLeft();
+	int getJoyXRight();
+	int getJoyYLeft();
+	int getJoyYRight();
 
-	values[15]=getLeftRedButton()?255:0;
-	values[16]=getLeftGreenButton()?255:0;
-	values[17]=getButtonPlus()?255:0;
+	int getTriggerLeft();
+	int getTriggerRight();
 
-	values[18]=getButtonZLeft()?255:0;
-	values[19]=getButtonZRight()?255:0;
-```
+	int getPadRight();
+	int getPadDown();
+	int getPadUp();
+	int getPadLeft();
+	int getButtonX();
+	int getButtonY();
+	int getButtonA();
+	int getButtonB();
 
-## Drawesome Mapping
+	int getButtonMinus();
+	int getButtonHome();
+	int getButtonPlus();
 
-```
-	values[1] = map(getPenXPosition(), 0, 64, 0, 256);
-	values[2] = map(getPenYPosition(), 0, 64, 0, 256);
-	values[3] = map(getPenPressure(), 0, 32, 0, 256);
-	values[4] = 0;
-	values[5] = 0;
-	values[6] = 0;
+	int getButtonZLeft();
+	int getButtonZRight();
 
+	void printInputsClassic(Stream &stream = Serial);
+	void getValuesClassic(uint8_t *values);
+</details>
+
+<details>
+	<summary>Guitar Hero Guitar</summary>
+
+	int getStickXGuitar();
+	int getStickYGuitar();
+
+	int getPlusButtonGuitar();
+	int getMinusButtonGuitar();
+
+	int getGreenButton();
+	int getRedButton();
+	int getYellowButton();
+	int getBlueButton();
+	int getOrangeButton();
+
+	int getStrumUp();
+	int getStrumDown();
+	int getWhammyBar();
+
+	void printInputsGuitar(Stream &stream = Serial);
+	void getValuesGuitar(uint8_t *values);
+</details>
+
+<details>
+	<summary>Guitar Hero and Taiko Drums</summary>
+
+	int getStickXDrums();
+	int getStickYDrums();
+
+	int getSoftnessDataFor();
+	int getSoftness();
+	int getHighHatDataFlag();
+	int getSoftnessDataFlag();
+
+	int getMinusButtonDrums();
+	int getPlusButtonDrums();
+
+	int getOrangeDrum();
+	int getRedDrum();
+	int getYellowDrum();
+	int getGreenDrum();
+	int getBlueDrumm();
+	int getBassPedal();
+
+	void printInputsDrums(Stream &stream = Serial);
+	void getValuesDrums(uint8_t *values);
+</details>
+
+<details>
+	<summary>DJ Hero</summary>
+
+	int getCrossfadeSlider();
+	int getEffectDial();
+
+	int getStickX();
+	int getStickY();
+
+	int getRightDJTable();
+	int getLeftDJTable();
+
+	int getEuphoriaButton();
+	int getPlusButton();
+	int getMinusButton();
+
+	int getLeftGreenButton();
+	int getLeftRedButton();
+	int getLeftBlueButton();
+	int getRightGreenButton();
+	int getRightRedButton();
+	int getRightBlueButton();
+
+	void printInputsDj(Stream &stream = Serial);
+	void getValuesDj(uint8_t *values);
+</details>
+
+<details>
+	<summary>Drawsome Tablet</summary>
+
+	int getPenXPosition();
+	int getPenYPosition();
+	int getPenPressure();
+	int getPenContact();
+
+	void initBytesDrawsome();
+
+	void printInputsDrawsome(Stream &stream = Serial);
+	void getValuesDrawsome(uint8_t *values);
+</details>
+
+
+## 2. Mapping Array
+
+All controllers have been mapped across a single readable array so that code written for one Wii accessory can be made generic for all of Wii accessory devices. The values that come from the controller are scaled to a 0-255 range for all analog and digital values. Each value is stored in a single byte in the ```values[]``` array, a public member of the ```Accessory``` class. 
+
+<details>
+	<summary>Nunchuck</summary>
+
+	values[0] = map(getJoyX(), 0, 255, 0, 255);
+	values[1] = map(getJoyY(), 0, 255, 0, 255);
+	values[2] = map(getRollAngle(), 0, 1024, 0, 256);
+	values[3] = map(getPitchAngle(), 0, 1024, 0, 256);
+	values[4] = map(getAccelX(), 0, 1024, 0, 256);
+	values[5] = map(getAccelY(), 0, 1024, 0, 256);
+
+	values[6] = map(getAccelZ(), 0, 1024, 0, 256);
 	values[7] = 0;
 	values[8] = 0;
 	values[9] = 0;
-	values[10] = 0;
-	values[11] = getPenContact() ? 255 : 0;
+	values[10] = getButtonZ() ? 255 : 0;
+	values[11] = getButtonC() ? 255 : 0;
 	values[12] = 0;
 	values[13] = 0;
-	values[14] = 0;
 
+	values[14] = 0;
 	values[15] = 0;
 	values[16] = 0;
+
 	values[17] = 0;
-
 	values[18] = 0;
-	values[19] = 0;
-```
+</details>
 
-## Drums Mapping
+<details>
+	<summary>Classic Controller Mapping</summary>
 
-```
-	values[1]=map(getCrossfadeSlider(),0,255,0,256);
-	values[2]=map(getEffectDial(),0,255,0,256);
-	values[3]=map(getStickXGuitar(),0,255,0,256);
-	values[4]=map(getStickYGuitar(),0,255,0,256);
-	values[5]=map(getRightDJTable(),0,255,0,256);
-	values[6]=map(getLeftDJTable(),0,255,0,256);
+	values[0] = map(getJoyXLeft(),0,64,0,256);
+	values[1] = map(getJoyYLeft(),0,64,0,256);
+	values[2] = map(getJoyXRight(),0,32,0,256);
+	values[3] = map(getJoyYRight(),0,32,0,256);
+	values[4] = 0;
+	values[5] = 0;
 
-	values[7]=getPlusButtonGuitar()?255:(getMinusButtonGuitar()?0:128);
-	values[8]=getEuphoriaButton()?255:0;
-	values[9]=0;
-	values[10]=0;
-	values[11]=getRightBlueButton()?255:0;
-	values[12]=getRightRedButton()?255:0;
-	values[13]=getRightGreenButton()?255:0;
-	values[14]=getLeftBlueButton()?255:0;
+	values[6] = getPadRight() ? 255 : (getPadLeft() ? 0 : 128);
+	values[7] = getPadDown() ? 0:(getPadUp() ? 255 : 128);
+	values[8] = getButtonX() ? 255 : 0;
+	values[9] = getButtonY() ? 255 : 0;
+	values[10] = getButtonZLeft() ? 255 : 0;
+	values[11] = map(getTriggerLeft(), 0, 32, 0, 256);
+	values[12] = getButtonA() ? 255 : 0;
+	values[13] = getButtonB() ? 255 : 0;
 
-	values[15]=getLeftRedButton()?255:0;
-	values[16]=getLeftGreenButton()?255:0;
-	values[17]=getButtonPlus()?255:0;
+	values[14] = getButtonMinus() ? 0 : (getButtonPlus() ? 255 : 128);
+	values[15] = getButtonHome() ? 255 : 0;
+	values[16] = 0;
 
-	values[18]=getButtonZLeft()?255:0;
-	values[19]=getButtonZRight()?255:0;
-```
+	values[17] = map(getTriggerRight(), 0, 32, 0, 256);
+	values[18] = getButtonZRight() ? 255 : 0;
+</details>
 
-## Guitar Mapping
+<details>
+	<summary>Guitar Hero Guitar Mapping</summary>
 
-```
-	values[1]=map(getWhammyBar(),0,255,0,256);
-	values[2]=0;
-	values[3]=0;
-	values[4]=0;
-	values[5]=0;
-	values[6]=0;
+	values[0] = map(getWhammyBar(), 0, 255, 0, 256);
+	values[1] = 0;
+	values[2] = 0;
+	values[3] = 0;
+	values[4] = 0;
+	values[5] = 0;
 
-	values[7]=getPlusButtonGuitar()?255:(getMinusButtonGuitar()?0:128);
-	values[8]=getStrumUp()?255:(getStrumDown()?0:128);
-	values[9]=0;
-	values[10]=0;
-	values[11]=getGreenButton()?255:0;
-	values[12]=getRedButton()?255:0;
-	values[13]=getYellowButton()?255:0;
-	values[14]=getBlueButton()?255:0;
+	values[6] = getPlusButtonGuitar() ? 255 : (getMinusButtonGuitar() ? 0 : 128);
+	values[7] = getStrumUp() ? 255 : (getStrumDown() ? 0 : 128);
+	values[8] = 0;
+	values[9] = 0;
+	values[10] = getGreenButton() ? 255 : 0;
+	values[11] = getRedButton() ? 255 : 0;
+	values[12] = getYellowButton() ? 255 : 0;
+	values[13] = getBlueButton() ? 255 : 0;
 
-	values[15]=getOrangeButton()?255:0;
-	values[16]=getLeftGreenButton()?255:0;
-	values[17]=getButtonPlus()?255:0;
+	values[14] = getOrangeButton() ? 255 : 0;
+	values[15] = getLeftGreenButton() ? 255: 0;
+	values[16] = getButtonPlus() ? 255 : 0;
 
-	values[18]=0;
-	values[19]=0;
-```
+	values[17] = 0;
+	values[18] = 0;
+</details>
 
+<details>
+	<summary>Guitar Hero and Taiko Drums Mapping</summary>
 
+	values[0] = map(getCrossfadeSlider(), 0, 255, 0, 256);
+	values[1] = map(getEffectDial(), 0, 255, 0, 256);
+	values[2] = map(getStickXGuitar(), 0, 255, 0, 256);
+	values[3] = map(getStickYGuitar(), 0, 255, 0, 256);
+	values[4] = map(getRightDJTable(), 0, 255, 0, 256);
+	values[5] = map(getLeftDJTable(), 0, 255, 0, 256);
+
+	values[6] = getPlusButtonGuitar() ? 255 : (getMinusButtonGuitar() ? 0 : 128);
+	values[7] = getEuphoriaButton() ? 255 : 0;
+	values[8] = 0;
+	values[9] = 0;
+	values[10] = getRightBlueButton() ? 255 : 0;
+	values[11] = getRightRedButton() ? 255 : 0;
+	values[12] = getRightGreenButton() ? 255 : 0;
+	values[13] = getLeftBlueButton() ? 255 : 0;
+
+	values[14] = getLeftRedButton() ? 255 : 0;
+	values[15] = getLeftGreenButton() ? 255 : 0;
+	values[16] = getButtonPlus() ? 255 : 0;
+
+	values[17] = getButtonZLeft() ? 255 : 0;
+	values[18] = getButtonZRight() ? 255 : 0;
+</details>
+
+<details>
+	<summary>DJ Table Mapping</summary>
+
+	values[0] = map(getCrossfadeSlider(), 0, 255, 0, 256);
+	values[1] = map(getEffectDial(), 0, 255, 0, 256);
+	values[2] = map(getStickX(), 0, 255, 0, 256);
+	values[3] = map(getStickY(), 0, 255, 0, 256);
+	values[4] = map(getRightDJTable(), 0, 255, 0, 256);
+	values[5] = map(getLeftDJTable(), 0, 255, 0, 256);
+
+	values[6] = getPlusButton() ? 255 : (getMinusButton() ? 0 : 128);
+	values[7] = getEuphoriaButton() ? 255:0;
+	values[8] = 0;
+	values[9] = 0;
+	values[10] = getRightBlueButton() ? 255 : 0;
+	values[11] = getRightRedButton() ? 255 : 0;
+	values[12] = getRightGreenButton() ? 255 : 0;
+	values[13] = getLeftBlueButton() ? 255 : 0;
+
+	values[14] = getLeftRedButton() ? 255 : 0;
+	values[15] = getLeftGreenButton() ? 255 : 0;
+	values[16] = getButtonPlus() ? 255 : 0;
+
+	values[17] = getButtonZLeft() ? 255 : 0;
+	values[18] = getButtonZRight() ? 255 : 0;
+</details>
+
+<details>
+	<summary>Drawsome Mapping</summary>
+
+	values[0] = map(getPenXPosition(), 0, 64, 0, 256);
+	values[1] = map(getPenYPosition(), 0, 64, 0, 256);
+	values[2] = map(getPenPressure(), 0, 32, 0, 256);
+	values[3] = 0;
+	values[4] = 0;
+	values[5] = 0;
+
+	values[6] = 0;
+	values[7] = 0;
+	values[8] = 0;
+	values[9] = 0;
+	values[10] = getPenContact() ? 255 : 0;
+	values[11] = 0;
+	values[12] = 0;
+	values[13] = 0;
+
+	values[14] = 0;
+	values[15] = 0;
+	values[16] = 0;
+
+	values[17] = 0;
+	values[18] = 0;
+</details>
 
 # Repository Structure 
 This repository is forked from a curated set of old Arduino Libraries. I kept the old commits and the fork linking to keep attribution to the work done before I picked up the torch. In my mind we all see farther by standing on the shoulders of giants, so it is only proper to give credit where credit is due.
 
-
+## Additional Credit
+This repository is forked from [madhephaestus](https://github.com/madhephaestus/WiiChuck). While working with this library for a project, I noticed some things were not so easy to find in the documentation and required you to dig into the sourcecode. While doing so, I decided to refactor the code to make it more readable.
