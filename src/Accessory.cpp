@@ -83,10 +83,9 @@ void Accessory::sendMultiSwitch(uint8_t iic, uint8_t sw)
 		Wire.write(1 << sw);
 		Wire.endTransmission();
 		err = Wire.endTransmission();
-		if (err != 0) {
+		if (err != 0)
 			Serial.println("sendMultiSwitch Resetting because of " + String(err));
-			reset();
-		} else
+		else
 			return;
 	}
 
@@ -279,8 +278,9 @@ void Accessory::begin()
 		Wire.begin(SDA, SCL, 10000);
 	else
 		Wire.begin();
-#else
+# else
 	Wire.begin();
+# endif
 #endif
 
 	// Start I2C if it's not running

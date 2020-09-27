@@ -11,8 +11,8 @@
 #define highHatDataFlagBytes	WII_BYTE2,		WII_BIT7,	true
 #define softnessDataFlagBytes	WII_BYTE2,		WII_BIT6,	true
 
-#define minusButtonBytes	WII_BYTE4,WII_BIT4,true
-#define plusButtonBytes		WII_BYTE4,WII_BIT2,true
+#define minusButtonBytes	WII_BYTE4,	WII_BIT4,	true
+#define plusButtonBytes		WII_BYTE4,	WII_BIT2,	true
 
 #define orangeDrumBytes	WII_BYTE5,	WII_BIT7,	true
 #define redDrumBytes	WII_BYTE5,	WII_BIT6,	true
